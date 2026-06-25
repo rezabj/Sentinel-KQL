@@ -1,0 +1,12 @@
+// Title: Successful MFA Followed by a Different Client Fingerprint
+// Author: Ibrahim Saud
+// Date: 18/06/2026
+// Reference: https://www.microsoft.com/en-us/security/blog/2026/05/04/breaking-the-code-multi-stage-code-of-conduct-phishing-campaign-leads-to-aitm-token-compromise/
+// Description: Detects a successful multifactor authentication followed within 10 minutes by another successful sign-in for the same account from a different IP address or user agent.
+union SigninLogs, AADNonInteractiveUserSignInLogs
+| where ResultType == 0
+| sort by UserPrincipalName asc, TimeGenerated asc
+| extend previous_ip = prev(IPAddress), previous_ua = prev(UserAgent), previous_time = prev(TimeGenerated)
+| extend same_user = (UserPrincipalName == prev(UserPrincipalName))
+| where same_user and ResultSignature == 0 and TimeGenerated - previous_time < 10m and (IPAddress != previous_ip or UserAgent != previous_ua)
+| project TimeGenerated, UserPrincipalName, IPAddress, previous_ip, UserAgent, previous_ua, AppDisplayName, CorrelationId
