@@ -1,0 +1,4 @@
+DeviceNetworkEvents
+| where InitiatingProcessFileName == "mshta.exe"
+| where RemoteIPType == "Public"
+| where ActionType == "ConnectionSuccess"
